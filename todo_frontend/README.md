@@ -1,82 +1,67 @@
-# Lightweight React Template for KAVIA
+# React To-do App (sql.js + IndexedDB)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+A modern to-do application built with React and in-browser SQLite via sql.js. Data is persisted to IndexedDB so your tasks survive refreshes in the same browser profile.
 
 ## Features
-
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+- Local SQLite database (sql.js WebAssembly)
+- IndexedDB persistence (idb-keyval)
+- Add, view, edit, toggle complete, and delete tasks
+- Ocean Professional theme (blue primary, amber accents)
+- Accessible controls and keyboard-friendly editing
+- Basic unit tests with mocked DB layer for speed
 
 ## Getting Started
 
-In the project directory, you can run:
+Install dependencies:
+- npm install
 
-### `npm start`
+Note: sql.js and idb-keyval are required. The wasm file (sql-wasm.wasm) will be copied automatically on start/build.
 
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Start the app (dev server on http://localhost:3000):
+- npm start
 
-### `npm test`
+Run tests:
+- npm test
 
-Launches the test runner in interactive watch mode.
+Build for production:
+- npm run build
 
-### `npm run build`
+## WebAssembly (wasm) note
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+sql.js requires a wasm file: `sql-wasm.wasm`. This repository includes a small script that copies the wasm from `node_modules/sql.js/dist` to `public/sql-wasm.wasm` automatically during `npm start` and `npm run build`.
 
-## Customization
+If you see errors loading the wasm, ensure the file exists at:
+- todo_frontend/public/sql-wasm.wasm
 
-### Colors
+The app uses:
+- locateFile: () => `${process.env.PUBLIC_URL}/sql-wasm.wasm`
 
-The main brand colors are defined as CSS variables in `src/App.css`:
+Note on sql.js loading:
+- To avoid bundling Node-specific code (which references 'fs'), the app loads sql.js at runtime via CDN and initializes it in the browser.
+- The WebAssembly file itself is still served locally from `public/sql-wasm.wasm` for reliability.
 
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
-```
+## Persistence
 
-### Components
+The SQLite database is exported to bytes and saved in IndexedDB under key `todo-db`. On load, the app restores from these bytes if present; otherwise it creates a new database and runs the schema.
 
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
+## Project Structure (relevant files)
+- src/components/TodoApp.jsx — App container, DB initialization, state
+- src/components/TodoInput.jsx — Add input
+- src/components/TodoList.jsx — List
+- src/components/TodoItem.jsx — Single item controls
+- src/db/sqliteClient.js — sql.js initialization, CRUD, persistence
+- src/db/schema.sql — SQL schema for tasks table
+- src/utils/storage.js — IndexedDB get/set using idb-keyval
+- src/App.css, src/index.css — Ocean Professional theme styles
 
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
+## Schema
+- tasks(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, completed INTEGER NOT NULL DEFAULT 0, created_at INTEGER)
 
-## Learn More
+## Accessibility
+- Inputs and buttons include labels or aria-labels
+- Keyboard: Enter to save edits, Escape to cancel
+- Focus rings visible for inputs and buttons
 
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Troubleshooting
+- Wasm not loading? Verify `public/sql-wasm.wasm` exists.
+- Clearing data: clear the site’s IndexedDB storage from browser dev tools.
